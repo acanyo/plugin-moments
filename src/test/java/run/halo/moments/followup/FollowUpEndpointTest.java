@@ -3,12 +3,14 @@ package run.halo.moments.followup;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -63,6 +65,30 @@ class FollowUpEndpointTest {
             .post().uri("/moments/one/follow-ups")
             .bodyValue(new FollowUpRequest("later"))
             .exchange().expectStatus().isUnauthorized();
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void returns409AfterConcurrentUpdateRetriesAreExhausted(boolean uc) {
+        var client = mock(ReactiveExtensionClient.class);
+        when(client.fetch(Moment.class, "one")).thenAnswer(invocation -> {
+            var moment = new Moment();
+            var metadata = new Metadata();
+            metadata.setName("one");
+            moment.setMetadata(metadata);
+            moment.setSpec(new Moment.MomentSpec());
+            moment.getSpec().setOwner("alice");
+            return Mono.just(moment);
+        });
+        when(client.update(any(Moment.class)))
+            .thenReturn(Mono.error(new OptimisticLockingFailureException("conflict")));
+
+        api(uc, new MomentFollowUpService(client), false, true)
+            .post().uri("/moments/one/follow-ups")
+            .bodyValue(new FollowUpRequest("补充内容"))
+            .exchange().expectStatus().isEqualTo(409);
+
+        verify(client, times(4)).update(any(Moment.class));
     }
 
     @Test

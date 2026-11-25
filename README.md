@@ -58,6 +58,8 @@ Finder、列表和详情 API 会通过 `spec.followUps` 一起返回后续记录
 | `PluginMoments__create_moment` | 以当前 MCP 访问密钥所有者的身份发布图文瞬间 |
 | `PluginMoments__delete_moment` | 按资源名称永久删除瞬间，调用前必须获得用户明确确认 |
 
+列表结果的 `items[i]` 和详情结果的 `moment` 包含 `emotion`（心情、天气和位置）及 `followUps`（按追加顺序排列的后续）。未填写心情与天气时 `emotion` 为 `null`，未追加后续时 `followUps` 为空数组。MCP 沿用已有的扁平字段结构，无需从 `spec` 读取；这些信息均为已保存的记录，查询时不会重新定位或获取天气。
+
 需要在 MCP Server 的访问密钥设置中选择需要开放的工具。未安装 MCP Server 时，不影响瞬间插件的其他功能。
 
 ## 主题适配

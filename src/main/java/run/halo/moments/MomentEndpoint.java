@@ -56,7 +56,9 @@ public class MomentEndpoint implements CustomEndpoint {
                         .required(true).implementation(String.class))
                     .requestBody(requestBodyBuilder().required(true)
                         .implementation(FollowUpRequest.class))
-                    .response(responseBuilder().implementation(Moment.class)))
+                    .response(responseBuilder().responseCode("200").implementation(Moment.class))
+                    .response(responseBuilder().responseCode("409")
+                        .description("Concurrent updates exhausted follow-up retries. Retry the request.")))
             .GET("moments", this::listMoment, builder -> {
                 builder.operationId("ListMoments")
                     .description("List moments.")

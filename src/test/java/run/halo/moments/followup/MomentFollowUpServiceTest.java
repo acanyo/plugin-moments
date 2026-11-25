@@ -133,6 +133,42 @@ class MomentFollowUpServiceTest {
     }
 
     @Test
+    void returnsConflictWhenOptimisticLockRetriesAreExhausted() {
+        var conflict = new OptimisticLockingFailureException("conflict");
+        when(client.fetch(Moment.class, "one"))
+            .thenAnswer(invocation -> Mono.just(moment("alice")));
+        when(client.update(any(Moment.class))).thenReturn(Mono.error(conflict));
+
+        assertThatThrownBy(() -> service.append("one", "补充内容", "alice", false).block())
+            .isInstanceOfSatisfying(ResponseStatusException.class, error -> {
+                assertThat(error.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                assertThat(error.getCause()).isSameAs(conflict);
+            });
+
+        verify(client, times(4)).fetch(Moment.class, "one");
+        var updates = org.mockito.ArgumentCaptor.forClass(Moment.class);
+        verify(client, times(4)).update(updates.capture());
+        assertThat(updates.getAllValues()).allSatisfy(moment ->
+            assertThat(moment.getSpec().getFollowUps()).hasSize(1));
+        assertThat(updates.getAllValues())
+            .extracting(moment -> moment.getSpec().getFollowUps().getFirst().getId())
+            .containsOnly(updates.getValue().getSpec().getFollowUps().getFirst().getId());
+    }
+
+    @Test
+    void doesNotRetryOrConvertOtherFailuresToConflict() {
+        var failure = new IllegalStateException("storage unavailable");
+        when(client.fetch(Moment.class, "one")).thenReturn(Mono.just(moment("alice")));
+        when(client.update(any(Moment.class))).thenReturn(Mono.error(failure));
+
+        assertThatThrownBy(() -> service.append("one", "补充内容", "alice", false).block())
+            .isSameAs(failure);
+
+        verify(client).fetch(Moment.class, "one");
+        verify(client).update(any(Moment.class));
+    }
+
+    @Test
     void creationCannotInjectReflectionsBeforeAMomentExists() {
         var moment = moment("alice");
         moment.getSpec().setFollowUps(List.of(new Moment.MomentFollowUp()));

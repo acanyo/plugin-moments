@@ -55,6 +55,9 @@ public class MomentFollowUpService {
                     return client.update(moment);
                 }))
             .retryWhen(Retry.max(3).filter(OptimisticLockingFailureException.class::isInstance)
-                .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
+                .onRetryExhaustedThrow((spec, signal) -> signal.failure()))
+            .onErrorMap(OptimisticLockingFailureException.class,
+                error -> new ResponseStatusException(HttpStatus.CONFLICT,
+                    "瞬间已被修改，追加后续失败，请重试", error));
     }
 }

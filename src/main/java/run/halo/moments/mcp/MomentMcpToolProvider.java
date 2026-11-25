@@ -80,11 +80,11 @@ public class MomentMcpToolProvider implements McpToolProvider {
             .name("list_moments")
             .title("List moments")
             .description("List Halo moments, including private or unapproved items when matched "
-                + "by filters.")
+                + "by filters. Each item includes recorded mood, weather, location and follow-ups.")
             .displayTitle("查询瞬间")
             .displayDescription(
                 "分页查询瞬间，可按作者、标签、可见性、审核状态和时间"
-                    + "筛选。")
+                    + "筛选，返回已记录的心情、天气、位置和后续。")
             .inputSchema(objectSchema(properties, List.of()))
             .outputSchema(objectSchema(Map.of(
                 "page", Map.of("type", "integer", "minimum", 1),
@@ -103,9 +103,10 @@ public class MomentMcpToolProvider implements McpToolProvider {
         return McpToolDefinition.builder()
             .name("get_moment")
             .title("Get a moment")
-            .description("Get a Halo moment by metadata name, including its owner and statistics.")
+            .description("Get a Halo moment by metadata name, including its recorded mood, weather, "
+                + "location, follow-ups, owner and statistics.")
             .displayTitle("获取瞬间详情")
-            .displayDescription("按资源名称获取瞬间、作者和统计信息。")
+            .displayDescription("按资源名称获取瞬间及其心情、天气、位置、后续、作者和统计信息。")
             .inputSchema(objectSchema(
                 Map.of("name", Map.of("type", "string", "minLength", 1)),
                 List.of("name")))
@@ -448,6 +449,33 @@ public class MomentMcpToolProvider implements McpToolProvider {
             ? null
             : spec.getReleaseTime().toString());
         result.put("permalink", status == null ? null : status.getPermalink());
+        result.put("emotion", spec == null ? null : emotionPayload(spec.getEmotion()));
+        result.put("followUps", spec == null || spec.getFollowUps() == null
+            ? List.of()
+            : spec.getFollowUps().stream()
+                .map(MomentMcpToolProvider::followUpPayload)
+                .toList());
+        return result;
+    }
+
+    private static Map<String, Object> emotionPayload(Moment.MomentEmotion emotion) {
+        if (emotion == null) {
+            return null;
+        }
+        var result = new LinkedHashMap<String, Object>();
+        result.put("mood", emotion.getMood());
+        result.put("location", emotion.getLocation());
+        result.put("weather", emotion.getWeather());
+        result.put("weatherSource", emotion.getWeatherSource());
+        return result;
+    }
+
+    private static Map<String, Object> followUpPayload(Moment.MomentFollowUp followUp) {
+        var result = new LinkedHashMap<String, Object>();
+        result.put("id", followUp.getId());
+        result.put("content", followUp.getContent());
+        result.put("createdAt", followUp.getCreatedAt() == null
+            ? null : followUp.getCreatedAt().toString());
         return result;
     }
 
@@ -505,21 +533,35 @@ public class MomentMcpToolProvider implements McpToolProvider {
             "url", nullableStringSchema(),
             "originType", nullableStringSchema()),
             List.of("type", "url", "originType"));
-        return objectSchema(Map.of(
-            "name", nullableStringSchema(),
+        var emotionSchema = nullableObjectSchema(Map.of(
+            "mood", nullableStringSchema(),
+            "location", nullableStringSchema(),
+            "weather", nullableStringSchema(),
+            "weatherSource", nullableStringSchema()),
+            List.of("mood", "location", "weather", "weatherSource"));
+        var followUpSchema = objectSchema(Map.of(
+            "id", nullableStringSchema(),
             "content", nullableStringSchema(),
-            "media", Map.of("type", "array", "items", mediaSchema),
-            "tags", stringArraySchema(),
-            "visible", Map.of(
-                "type", List.of("string", "null"),
-                "enum", Arrays.asList("PUBLIC", "PRIVATE", null)),
-            "owner", nullableStringSchema(),
-            "approved", Map.of("type", "boolean"),
-            "releaseTime", nullableDateTimeSchema(),
-            "permalink", nullableStringSchema()),
+            "createdAt", nullableDateTimeSchema()),
+            List.of("id", "content", "createdAt"));
+        var properties = new LinkedHashMap<String, Object>();
+        properties.put("name", nullableStringSchema());
+        properties.put("content", nullableStringSchema());
+        properties.put("media", Map.of("type", "array", "items", mediaSchema));
+        properties.put("tags", stringArraySchema());
+        properties.put("visible", Map.of(
+            "type", List.of("string", "null"),
+            "enum", Arrays.asList("PUBLIC", "PRIVATE", null)));
+        properties.put("owner", nullableStringSchema());
+        properties.put("approved", Map.of("type", "boolean"));
+        properties.put("releaseTime", nullableDateTimeSchema());
+        properties.put("permalink", nullableStringSchema());
+        properties.put("emotion", emotionSchema);
+        properties.put("followUps", Map.of("type", "array", "items", followUpSchema));
+        return objectSchema(properties,
             List.of(
                 "name", "content", "media", "tags", "visible", "owner", "approved",
-                "releaseTime", "permalink"));
+                "releaseTime", "permalink", "emotion", "followUps"));
     }
 
     private static Map<String, Object> listedMomentOutputSchema() {

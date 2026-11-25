@@ -8,10 +8,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -54,11 +58,11 @@ class MomentMcpToolProviderTest {
         assertOutputSchema(
             "create_moment",
             "name", "content", "media", "tags", "visible", "owner", "approved",
-            "releaseTime", "permalink");
+            "releaseTime", "permalink", "emotion", "followUps");
         assertOutputSchema(
             "delete_moment",
             "name", "content", "media", "tags", "visible", "owner", "approved",
-            "releaseTime", "permalink");
+            "releaseTime", "permalink", "emotion", "followUps");
 
         var listItems = propertySchema(tool("list_moments").outputSchema(), "items");
         assertMomentSchema((Map<?, ?>) listItems.get("items"));
@@ -152,6 +156,76 @@ class MomentMcpToolProviderTest {
         assertThat(result.structuredContent().get("moment")).isInstanceOf(Map.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"list_moments", "get_moment"})
+    void shouldReturnRecordedEmotionAndOrderedFollowUps(String toolName) {
+        var moment = new Moment();
+        moment.setSpec(new Moment.MomentSpec());
+        var emotion = new Moment.MomentEmotion();
+        emotion.setMood("😊 开心");
+        emotion.setLocation("北京市");
+        emotion.setWeather("晴 · 22°C");
+        emotion.setWeatherSource("open-meteo");
+        moment.getSpec().setEmotion(emotion);
+        var first = new Moment.MomentFollowUp();
+        first.setId("first");
+        first.setContent("资料已发布。\n感谢参与。");
+        first.setCreatedAt(Instant.parse("2026-11-06T08:00:00Z"));
+        var second = new Moment.MomentFollowUp();
+        second.setId("second");
+        second.setContent("下期活动安排已公布。");
+        second.setCreatedAt(Instant.parse("2026-11-25T08:00:00Z"));
+        moment.getSpec().setFollowUps(List.of(first, second));
+
+        var payload = readMomentPayload(toolName, moment);
+
+        assertThat(payload.get("emotion")).isEqualTo(Map.of(
+            "mood", "😊 开心", "location", "北京市", "weather", "晴 · 22°C",
+            "weatherSource", "open-meteo"));
+        assertThat(payload.get("followUps")).isEqualTo(List.of(
+            Map.of("id", "first", "content", first.getContent(),
+                "createdAt", "2026-11-06T08:00:00Z"),
+            Map.of("id", "second", "content", second.getContent(),
+                "createdAt", "2026-11-25T08:00:00Z")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"list_moments", "get_moment"})
+    void shouldReturnNullEmotionAndEmptyFollowUpsForOldMoments(String toolName) {
+        var moment = new Moment();
+        for (var spec : new Moment.MomentSpec[] {null, new Moment.MomentSpec()}) {
+            moment.setSpec(spec);
+
+            var payload = readMomentPayload(toolName, moment);
+
+            assertThat(payload.containsKey("emotion")).isTrue();
+            assertThat(payload.containsKey("followUps")).isTrue();
+            assertThat(payload.get("emotion")).isNull();
+            assertThat(payload.get("followUps")).isEqualTo(List.of());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"list_moments", "get_moment"})
+    void shouldReturnPartialEmotionWithNullableFields(String toolName) {
+        var moment = new Moment();
+        moment.setSpec(new Moment.MomentSpec());
+        var emotion = new Moment.MomentEmotion();
+        emotion.setMood("😌 平静");
+        moment.getSpec().setEmotion(emotion);
+        moment.getSpec().setFollowUps(List.of());
+
+        var payload = readMomentPayload(toolName, moment);
+        var actual = (Map<?, ?>) payload.get("emotion");
+
+        assertThat(actual.keySet()).isEqualTo(Set.of("mood", "location", "weather", "weatherSource"));
+        assertThat(actual.get("mood")).isEqualTo("😌 平静");
+        assertThat(actual.get("location")).isNull();
+        assertThat(actual.get("weather")).isNull();
+        assertThat(actual.get("weatherSource")).isNull();
+        assertThat(payload.get("followUps")).isEqualTo(List.of());
+    }
+
     @Test
     void shouldReturnStableNotFoundError() {
         when(momentService.findMomentByName("missing"))
@@ -242,6 +316,21 @@ class MomentMcpToolProviderTest {
         return provider.tools().filter(tool -> tool.name().equals(name)).blockFirst();
     }
 
+    private Map<?, ?> readMomentPayload(String toolName, Moment moment) {
+        if (toolName.equals("list_moments")) {
+            when(client.listBy(eq(Moment.class), any(ListOptions.class), any(PageRequest.class)))
+                .thenReturn(Mono.just(new ListResult<>(1, 20, 1L, List.of(moment))));
+            var result = tool(toolName).handler()
+                .execute(new McpToolInvocation(toolName, Map.of())).block();
+            return (Map<?, ?>) ((List<?>) result.structuredContent().get("items")).getFirst();
+        }
+        when(momentService.findMomentByName("moment-1"))
+            .thenReturn(Mono.just(ListedMoment.builder().moment(moment).build()));
+        var result = tool(toolName).handler()
+            .execute(new McpToolInvocation(toolName, Map.of("name", "moment-1"))).block();
+        return (Map<?, ?>) result.structuredContent().get("moment");
+    }
+
     private void assertOutputSchema(String toolName, String... propertyNames) {
         var schema = tool(toolName).outputSchema();
         assertThat(schema).containsEntry("type", "object");
@@ -257,10 +346,22 @@ class MomentMcpToolProviderTest {
         assertClosedObjectSchema(
             schema,
             "name", "content", "media", "tags", "visible", "owner", "approved",
-            "releaseTime", "permalink");
+            "releaseTime", "permalink", "emotion", "followUps");
         var media = propertySchema(schema, "media");
         assertClosedObjectSchema(
             (Map<?, ?>) media.get("items"), "type", "url", "originType");
+        var emotion = propertySchema(schema, "emotion");
+        assertThat(emotion.get("type")).isEqualTo(List.of("object", "null"));
+        assertClosedObjectSchema(emotion, "mood", "location", "weather", "weatherSource");
+        for (var field : List.of("mood", "location", "weather", "weatherSource")) {
+            assertThat(propertySchema(emotion, field).get("type"))
+                .isEqualTo(List.of("string", "null"));
+        }
+        var followUps = propertySchema(schema, "followUps");
+        assertThat(followUps.get("type")).isEqualTo("array");
+        var followUp = (Map<?, ?>) followUps.get("items");
+        assertClosedObjectSchema(followUp, "id", "content", "createdAt");
+        assertThat(propertySchema(followUp, "createdAt").get("format")).isEqualTo("date-time");
     }
 
     private void assertClosedObjectSchema(Map<?, ?> schema, String... propertyNames) {
