@@ -38,23 +38,23 @@ async function save() {
 </script>
 
 <template>
-  <VModal title="后来的我" :width="520" :layer-closable="!saving" @close="emit('close')">
+  <VModal title="后续" :width="520" :layer-closable="!saving" @close="emit('close')">
     <form class=":uno: follow-up-editor" @submit.prevent="save">
-      <p class=":uno: follow-up-editor__intro">给当时的自己，留一句现在想说的话。</p>
-      <label :for="inputId">写下后续</label>
+      <p class=":uno: follow-up-editor__intro">补充这条瞬间的最新进展或说明。</p>
+      <label :for="inputId">后续内容</label>
       <textarea
         :id="inputId"
         v-model="content"
         :disabled="saving"
         maxlength="1000"
         rows="5"
-        placeholder="当时很难过的事，现在已经放下了。"
+        placeholder="活动已结束，感谢大家参与。"
         autofocus
         @keydown.ctrl.enter.prevent="save"
         @keydown.meta.enter.prevent="save"
       />
       <div class=":uno: follow-up-editor__hint">
-        <span>追加后会记录当前时间，原来的瞬间会保留。</span>
+        <span>后续将记录添加时间，保留原内容。</span>
         <span>{{ content.length }}/1000</span>
       </div>
     </form>

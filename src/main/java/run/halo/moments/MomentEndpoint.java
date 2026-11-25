@@ -50,7 +50,7 @@ public class MomentEndpoint implements CustomEndpoint {
         return SpringdocRouteBuilder.route()
             .POST("moments/{name}/follow-ups", this::appendFollowUp,
                 builder -> builder.operationId("AppendMomentFollowUp")
-                    .description("Append a later reflection to an owned moment.")
+                    .description("Append a follow-up to an owned moment.")
                     .tag(tag)
                     .parameter(parameterBuilder().name("name").in(ParameterIn.PATH)
                         .required(true).implementation(String.class))

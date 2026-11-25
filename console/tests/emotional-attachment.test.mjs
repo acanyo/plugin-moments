@@ -129,7 +129,7 @@ for (const file of ["../src/components/MomentEdit.vue", "../src/uc/MomentEdit.vu
       });
       const saving = ref(false);
       const formState = ref({
-        spec: { emotionalAttachment: { mood: "😌 平静", weather: "晴 · 22°C" } },
+        spec: { emotion: { mood: "😌 平静", weather: "晴 · 22°C" } },
       });
       const submit = loadSubmitHandler(file, {
         saving,
@@ -150,7 +150,7 @@ for (const file of ["../src/components/MomentEdit.vue", "../src/uc/MomentEdit.vu
       });
       const request = submit();
       assert.equal(saving.value, true);
-      assert.equal(formState.value.spec.emotionalAttachment.mood, "😌 平静");
+      assert.equal(formState.value.spec.emotion.mood, "😌 平静");
       assert.equal(resets, 0);
       await submit();
       assert.equal(saves, 1);
@@ -158,7 +158,7 @@ for (const file of ["../src/components/MomentEdit.vue", "../src/uc/MomentEdit.vu
       await request;
       assert.equal(saving.value, false);
       assert.equal(resets, fails ? 0 : 1);
-      if (fails) assert.equal(formState.value.spec.emotionalAttachment.weather, "晴 · 22°C");
+      if (fails) assert.equal(formState.value.spec.emotion.weather, "晴 · 22°C");
     }
   });
 }

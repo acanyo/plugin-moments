@@ -74,9 +74,9 @@
         </div>
         <div
           class="moment-emotion"
-          aria-label="情感寄托"
-          th:if="${moment.spec.emotionalAttachment != null}"
-          th:with="emotion=${moment.spec.emotionalAttachment}"
+          aria-label="心情与天气"
+          th:if="${moment.spec.emotion != null}"
+          th:with="emotion=${moment.spec.emotion}"
         >
           <span th:if="${not #strings.isEmpty(emotion.mood)}" th:text="${emotion.mood}"></span>
           <span th:if="${not #strings.isEmpty(emotion.weather)}"
@@ -87,9 +87,9 @@
             <span aria-hidden="true">📍 </span><span th:text="${emotion.location}"></span>
           </span>
         </div>
-        <section class="moment-follow-ups" aria-label="后来的我"
+        <section class="moment-follow-ups" aria-label="后续"
                  th:if="${not #lists.isEmpty(moment.spec.followUps)}">
-          <h3>🌱 后来的我</h3>
+          <h3>🌱 后续</h3>
           <ol>
             <li th:each="followUp : ${moment.spec.followUps}">
               <time th:if="${followUp.createdAt != null}" th:datetime="${followUp.createdAt}"

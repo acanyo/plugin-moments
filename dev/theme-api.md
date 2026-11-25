@@ -109,25 +109,25 @@
 
 Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置使用，无需依赖路由页面。
 
-返回瞬间的 Finder 方法都通过 `MomentVo.spec.emotionalAttachment` 提供[情感寄托](#情感寄托)，无需额外请求天气或位置接口：
+返回瞬间的 Finder 方法都通过 `MomentVo.spec.emotion` 提供[心情与天气](#心情与天气)，无需额外请求天气或位置接口：
 
-| 调用方式 | 情感寄托的读取位置 |
+| 调用方式 | 心情与天气的读取位置 |
 | ---- | ---- |
-| `momentFinder.listAll()`、`momentFinder.listBy(tag)` | 遍历结果后读取 `moment.spec.emotionalAttachment` |
-| `momentFinder.list(page, size)`、`momentFinder.list({...})`、`momentFinder.listByTag(page, size, tag)` | 遍历 `items` 后读取 `moment.spec.emotionalAttachment` |
-| `momentFinder.get(name)` | 直接读取 `moment.spec.emotionalAttachment` |
+| `momentFinder.listAll()`、`momentFinder.listBy(tag)` | 遍历结果后读取 `moment.spec.emotion` |
+| `momentFinder.list(page, size)`、`momentFinder.list({...})`、`momentFinder.listByTag(page, size, tag)` | 遍历 `items` 后读取 `moment.spec.emotion` |
+| `momentFinder.get(name)` | 直接读取 `moment.spec.emotion` |
 
 例如，读取单个瞬间的心情：
 
 ```html
 <th:block th:with="moment=${momentFinder.get('moment-example')}">
-    <th:block th:if="${moment != null and moment.spec.emotionalAttachment != null}">
-        <span th:text="${moment.spec.emotionalAttachment.mood}"></span>
+    <th:block th:if="${moment != null and moment.spec.emotion != null}">
+        <span th:text="${moment.spec.emotion.mood}"></span>
     </th:block>
 </th:block>
 ```
 
-`moment-example` 需替换为实际的瞬间名称。所有字段均为可选，主题需兼容未填写情感寄托的旧瞬间。
+`moment-example` 需替换为实际的瞬间名称。所有字段均为可选，主题需兼容未填写心情与天气的旧瞬间。
 
 ### listAll()
 
@@ -233,9 +233,9 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
 
 ---
 
-## 情感寄托
+## 心情与天气
 
-`MomentVo.spec.emotionalAttachment` 是可选对象，未填写时可能缺失或为 `null`。Finder 和[公共 REST API](./rest-api.md#情感寄托字段) 都会原样返回已保存的信息；查看瞬间时不会重新定位或刷新天气。
+`MomentVo.spec.emotion` 是可选对象，未填写时可能缺失或为 `null`。Finder 和[公共 REST API](./rest-api.md#心情与天气字段) 都会原样返回已保存的信息；查看瞬间时不会重新定位或刷新天气。
 
 | 字段 | 类型 | 说明 |
 | ---- | ---- | ---- |
@@ -247,8 +247,8 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
 插件内置的列表和详情模板会展示这些信息。主题自行提供 `moments.html`、`moment.html` 或通过 Finder 渲染瞬间时，可在内容下方加入：
 
 ```html
-<div th:if="${moment.spec.emotionalAttachment != null}"
-     th:with="emotion=${moment.spec.emotionalAttachment}" aria-label="情感寄托">
+<div th:if="${moment.spec.emotion != null}"
+     th:with="emotion=${moment.spec.emotion}" aria-label="心情与天气">
     <span th:if="${not #strings.isEmpty(emotion.mood)}" th:text="${emotion.mood}"></span>
     <span th:if="${not #strings.isEmpty(emotion.weather)}" th:text="${emotion.weather}"
           th:title="${emotion.weatherSource == 'open-meteo' ? '天气数据来自 Open-Meteo（https://open-meteo.com/）' : null}"></span>
@@ -258,7 +258,7 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
 
 来源信息保留在天气的悬停提示中。展示内容使用 `th:text` 进行转义；访问权限沿用瞬间本身的可见性和审核规则。
 
-## 后来的我
+## 后续
 
 `MomentVo.spec.followUps` 是可选的后续记录数组，未追加时可能缺失、为 `null` 或为空数组。它与原瞬间一起返回，适用于全部返回 `MomentVo` 的 Finder 方法、列表模板和详情模板，无需额外查询。
 
@@ -273,8 +273,8 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
 原文保持在 `moment.spec.content`，后续单独读取 `moment.spec.followUps`。可以在原文下方加入：
 
 ```html
-<section th:if="${not #lists.isEmpty(moment.spec.followUps)}" aria-label="后来的我">
-    <h3>🌱 后来的我</h3>
+<section th:if="${not #lists.isEmpty(moment.spec.followUps)}" aria-label="后续">
+    <h3>🌱 后续</h3>
     <ol>
         <li th:each="followUp : ${moment.spec.followUps}">
             <time th:datetime="${followUp.createdAt}"
@@ -319,7 +319,7 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
         "visible": "PUBLIC",
         "owner": "string",
         "tags": ["string"],
-        "emotionalAttachment": {
+        "emotion": {
             "mood": "😌 平静",
             "location": "杭州市",
             "weather": "晴 · 22°C",
@@ -328,7 +328,7 @@ Finder API 由 `momentFinder` 对象提供，可在主题模板的任意位置�
         "followUps": [
             {
                 "id": "server-generated-id",
-                "content": "当时很难过的事，现在已经放下了。",
+                "content": "活动已结束，感谢大家参与。",
                 "createdAt": "2026-11-06T08:00:00Z"
             }
         ]

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
@@ -23,9 +24,12 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.User;
+import run.halo.app.extension.ExtensionClient;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.app.extension.controller.Reconciler;
 import run.halo.moments.Moment;
+import run.halo.moments.MomentMigration;
 import run.halo.moments.service.impl.MomentServiceImpl;
 
 class MomentFollowUpServiceTest {
@@ -35,22 +39,22 @@ class MomentFollowUpServiceTest {
     @Test
     void appendsWithoutChangingOriginalContentTimeVisibilityOrEmotion() {
         var moment = moment("alice");
-        moment.getSpec().setEmotionalAttachment(new Moment.MomentEmotion());
-        moment.getSpec().getEmotionalAttachment().setMood("😌 平静");
+        moment.getSpec().setEmotion(new Moment.MomentEmotion());
+        moment.getSpec().getEmotion().setMood("😌 平静");
         when(client.fetch(Moment.class, "one")).thenReturn(Mono.just(moment));
         when(client.update(any(Moment.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
         var before = Instant.now();
 
-        var saved = service.append("one", "  现在已经放下了。  ", "alice", false).block();
+        var saved = service.append("one", "  活动已结束。  ", "alice", false).block();
 
-        assertThat(saved.getSpec().getContent().getRaw()).isEqualTo("原来的感受");
+        assertThat(saved.getSpec().getContent().getRaw()).isEqualTo("原始内容");
         assertThat(saved.getSpec().getReleaseTime()).isEqualTo(Instant.parse("2020-01-01T00:00:00Z"));
         assertThat(saved.getSpec().getVisible()).isEqualTo(Moment.MomentVisible.PRIVATE);
-        assertThat(saved.getSpec().getEmotionalAttachment().getMood()).isEqualTo("😌 平静");
+        assertThat(saved.getSpec().getEmotion().getMood()).isEqualTo("😌 平静");
         assertThat(saved.getSpec().getApproved()).isTrue();
         assertThat(saved.getSpec().getFollowUps()).singleElement().satisfies(item -> {
             assertThat(item.getId()).isNotBlank();
-            assertThat(item.getContent()).isEqualTo("现在已经放下了。");
+            assertThat(item.getContent()).isEqualTo("活动已结束。");
             assertThat(item.getCreatedAt()).isBetween(before, Instant.now());
         });
     }
@@ -63,9 +67,14 @@ class MomentFollowUpServiceTest {
         when(client.update(any(Moment.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
 
         var saved = service.append("one", "后来", "alice", true).block();
+        var migrationClient = mock(ExtensionClient.class);
+        when(migrationClient.fetch(Moment.class, "one")).thenReturn(Optional.of(saved));
+
+        new MomentMigration(migrationClient).reconcile(new Reconciler.Request("one"));
 
         assertThat(saved.getSpec().getApproved()).isFalse();
         assertThat(saved.getSpec().getApprovedTime()).isNull();
+        verify(migrationClient, never()).update(any(Moment.class));
     }
 
     @ParameterizedTest
@@ -139,7 +148,7 @@ class MomentFollowUpServiceTest {
                 new UsernamePasswordAuthenticationToken("alice", ""))).block();
 
         assertThat(created.getSpec().getFollowUps()).isNull();
-        assertThat(created.getSpec().getContent().getRaw()).isEqualTo("原来的感受");
+        assertThat(created.getSpec().getContent().getRaw()).isEqualTo("原始内容");
     }
 
     private static Moment moment(String owner) {
@@ -151,7 +160,7 @@ class MomentFollowUpServiceTest {
         var spec = new Moment.MomentSpec();
         spec.setOwner(owner);
         spec.setContent(new Moment.MomentContent());
-        spec.getContent().setRaw("原来的感受");
+        spec.getContent().setRaw("原始内容");
         spec.setApproved(true);
         spec.setVisible(Moment.MomentVisible.PRIVATE);
         spec.setReleaseTime(Instant.parse("2020-01-01T00:00:00Z"));

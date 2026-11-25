@@ -199,7 +199,7 @@ defineOptions({
       </ul>
     </div>
 
-    <EmotionAttachment :value="moment.moment.spec.emotionalAttachment" />
+    <EmotionAttachment :value="moment.moment.spec.emotion" />
 
     <MomentFollowUps :moment="moment.moment" :uc="uc" />
 

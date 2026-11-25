@@ -10,7 +10,7 @@ const emotion = computed(() => normalizeEmotion(props.value));
 </script>
 
 <template>
-  <div v-if="emotion" class=":uno: moment-emotion" aria-label="情感寄托">
+  <div v-if="emotion" class=":uno: moment-emotion" aria-label="心情与天气">
     <span v-if="emotion.mood" class=":uno: moment-emotion__mood">{{ emotion.mood }}</span>
     <span
       v-if="emotion.weather"

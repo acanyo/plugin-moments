@@ -2,10 +2,10 @@
   "openapi" : "3.0.1",
   "info" : {
     "title" : "Halo",
-    "version" : "2.17.0"
+    "version" : "2.26.0-beta.2"
   },
   "servers" : [ {
-    "url" : "http://localhost:65084",
+    "url" : "http://localhost:63917",
     "description" : "Generated server url"
   } ],
   "security" : [ {
@@ -13,88 +13,6 @@
     "bearerAuth" : [ ]
   } ],
   "paths" : {
-    "/apis/console.api.moment.halo.run/v1alpha1/moments/{name}/follow-ups" : {
-      "post" : {
-        "description" : "Append a later reflection to an owned moment.",
-        "operationId" : "AppendMomentFollowUp",
-        "parameters" : [
-          {
-            "in" : "path",
-            "name" : "name",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "requestBody" : {
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FollowUpRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "default" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Moment"
-                }
-              }
-            },
-            "description" : "default response"
-          }
-        },
-        "tags" : [
-          "console.api.moment.halo.run/v1alpha1/Moment"
-        ]
-      }
-    },
-    "/apis/uc.api.moment.halo.run/v1alpha1/moments/{name}/follow-ups" : {
-      "post" : {
-        "description" : "Append a later reflection to the current user's moment.",
-        "operationId" : "AppendMyMomentFollowUp",
-        "parameters" : [
-          {
-            "in" : "path",
-            "name" : "name",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "requestBody" : {
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FollowUpRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "default" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Moment"
-                }
-              }
-            },
-            "description" : "default response"
-          }
-        },
-        "tags" : [
-          "uc.api.moment.halo.run/v1alpha1/moment"
-        ]
-      }
-    },
     "/apis/console.api.moment.halo.run/v1alpha1/moments" : {
       "get" : {
         "description" : "List moments.",
@@ -259,6 +177,43 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ListedMoment"
+                }
+              }
+            },
+            "description" : "default response"
+          }
+        },
+        "tags" : [ "console.api.moment.halo.run/v1alpha1/Moment" ]
+      }
+    },
+    "/apis/console.api.moment.halo.run/v1alpha1/moments/{name}/follow-ups" : {
+      "post" : {
+        "description" : "Append a follow-up to an owned moment.",
+        "operationId" : "AppendMomentFollowUp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FollowUpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "default" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Moment"
                 }
               }
             },
@@ -741,6 +696,43 @@
         "tags" : [ "uc.api.moment.halo.run/v1alpha1/moment" ]
       }
     },
+    "/apis/uc.api.moment.halo.run/v1alpha1/moments/{name}/follow-ups" : {
+      "post" : {
+        "description" : "Append a follow-up to the current user's moment.",
+        "operationId" : "AppendMyMomentFollowUp",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "name",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FollowUpRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "default" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Moment"
+                }
+              }
+            },
+            "description" : "default response"
+          }
+        },
+        "tags" : [ "uc.api.moment.halo.run/v1alpha1/moment" ]
+      }
+    },
     "/apis/uc.api.moment.halo.run/v1alpha1/tags" : {
       "get" : {
         "description" : "List all moment tags.",
@@ -808,7 +800,7 @@
         }
       },
       "CopyOperation" : {
-        "required" : [ "op", "from", "path" ],
+        "required" : [ "from", "op", "path" ],
         "type" : "object",
         "properties" : {
           "from" : {
@@ -826,6 +818,18 @@
             "type" : "string",
             "description" : "A JSON Pointer path pointing to the location to move/copy from.",
             "example" : "/a/b/c"
+          }
+        }
+      },
+      "FollowUpRequest" : {
+        "required" : [ "content" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "maxLength" : 1000,
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Plain-text follow-up"
           }
         }
       },
@@ -876,7 +880,7 @@
           },
           "hasNext" : {
             "type" : "boolean",
-            "description" : "Indicates whether current page has previous page."
+            "description" : "Indicates whether current page has next page."
           },
           "hasPrevious" : {
             "type" : "boolean",
@@ -923,15 +927,18 @@
             "type" : "object",
             "additionalProperties" : {
               "type" : "string"
-            }
+            },
+            "description" : "Annotations are like key-value format."
           },
           "creationTimestamp" : {
             "type" : "string",
+            "description" : "Creation timestamp of the Extension.",
             "format" : "date-time",
             "nullable" : true
           },
           "deletionTimestamp" : {
             "type" : "string",
+            "description" : "Deletion timestamp of the Extension.",
             "format" : "date-time",
             "nullable" : true
           },
@@ -952,7 +959,8 @@
             "type" : "object",
             "additionalProperties" : {
               "type" : "string"
-            }
+            },
+            "description" : "Labels are like key-value format."
           },
           "name" : {
             "type" : "string",
@@ -960,10 +968,12 @@
           },
           "version" : {
             "type" : "integer",
+            "description" : "Current version of the Extension. It will be bumped up every update.",
             "format" : "int64",
             "nullable" : true
           }
-        }
+        },
+        "description" : "Metadata of Extension."
       },
       "Moment" : {
         "required" : [ "apiVersion", "kind", "metadata", "spec" ],
@@ -972,11 +982,17 @@
           "apiVersion" : {
             "type" : "string"
           },
+          "approved" : {
+            "type" : "boolean"
+          },
           "kind" : {
             "type" : "string"
           },
           "metadata" : {
             "$ref" : "#/components/schemas/Metadata"
+          },
+          "publiclyVisible" : {
+            "type" : "boolean"
           },
           "spec" : {
             "$ref" : "#/components/schemas/MomentSpec"
@@ -1007,6 +1023,52 @@
           }
         }
       },
+      "MomentEmotion" : {
+        "type" : "object",
+        "properties" : {
+          "location" : {
+            "maxLength" : 100,
+            "type" : "string",
+            "description" : "City or locality name. Exact coordinates are not stored"
+          },
+          "mood" : {
+            "maxLength" : 32,
+            "type" : "string",
+            "description" : "Selected mood, including its emoji"
+          },
+          "weather" : {
+            "maxLength" : 64,
+            "type" : "string",
+            "description" : "Weather snapshot, including temperature when available"
+          },
+          "weatherSource" : {
+            "type" : "string",
+            "description" : "Attribution for automatically retrieved weather",
+            "enum" : [ "open-meteo" ]
+          }
+        },
+        "description" : "Optional mood, weather and location captured with the moment"
+      },
+      "MomentFollowUp" : {
+        "required" : [ "content", "createdAt", "id" ],
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "maxLength" : 1000,
+            "type" : "string",
+            "description" : "Plain-text follow-up"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "description" : "Server-recorded time of the follow-up",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "Server-generated identifier"
+          }
+        }
+      },
       "MomentList" : {
         "required" : [ "first", "hasNext", "hasPrevious", "items", "last", "page", "size", "total", "totalPages" ],
         "type" : "object",
@@ -1017,7 +1079,7 @@
           },
           "hasNext" : {
             "type" : "boolean",
-            "description" : "Indicates whether current page has previous page."
+            "description" : "Indicates whether current page has next page."
           },
           "hasPrevious" : {
             "type" : "boolean",
@@ -1075,69 +1137,6 @@
         },
         "description" : "Media item of moment"
       },
-      "FollowUpRequest" : {
-        "required" : [
-          "content"
-        ],
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "maxLength" : 1000,
-            "minLength" : 1,
-            "type" : "string",
-            "description" : "Plain-text reflection"
-          }
-        }
-      },
-      "MomentFollowUp" : {
-        "required" : [
-          "content",
-          "createdAt",
-          "id"
-        ],
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "maxLength" : 1000,
-            "type" : "string",
-            "description" : "Plain-text reflection"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "description" : "Server-recorded time of the reflection",
-            "format" : "date-time"
-          },
-          "id" : {
-            "type" : "string",
-            "description" : "Server-generated identifier"
-          }
-        }
-      },
-      "MomentEmotion" : {
-        "type" : "object",
-        "properties" : {
-          "mood" : {
-            "maxLength" : 32,
-            "type" : "string",
-            "description" : "Selected mood, including its emoji"
-          },
-          "location" : {
-            "maxLength" : 100,
-            "type" : "string",
-            "description" : "City or locality name. Exact coordinates are not stored"
-          },
-          "weather" : {
-            "maxLength" : 64,
-            "type" : "string",
-            "description" : "Weather snapshot, including temperature when available"
-          },
-          "weatherSource" : {
-            "type" : "string",
-            "description" : "Attribution for automatically retrieved weather",
-            "enum" : [ "open-meteo" ]
-          }
-        }
-      },
       "MomentSpec" : {
         "required" : [ "content", "owner" ],
         "type" : "object",
@@ -1153,13 +1152,13 @@
           "content" : {
             "$ref" : "#/components/schemas/MomentContent"
           },
-          "emotionalAttachment" : {
+          "emotion" : {
             "$ref" : "#/components/schemas/MomentEmotion"
           },
           "followUps" : {
             "maxItems" : 100,
             "type" : "array",
-            "description" : "Later reflections, in append order",
+            "description" : "Follow-ups, in append order",
             "items" : {
               "$ref" : "#/components/schemas/MomentFollowUp"
             }
@@ -1203,7 +1202,7 @@
         }
       },
       "MoveOperation" : {
-        "required" : [ "op", "from", "path" ],
+        "required" : [ "from", "op", "path" ],
         "type" : "object",
         "properties" : {
           "from" : {

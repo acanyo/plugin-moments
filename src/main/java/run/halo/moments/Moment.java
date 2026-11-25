@@ -46,9 +46,9 @@ public class Moment extends AbstractExtension {
         private Set<String> tags;
 
         @Schema(description = "Optional mood, weather and location captured with the moment")
-        private MomentEmotion emotionalAttachment;
+        private MomentEmotion emotion;
 
-        @ArraySchema(arraySchema = @Schema(description = "Later reflections, in append order"),
+        @ArraySchema(arraySchema = @Schema(description = "Follow-ups, in append order"),
             maxItems = 100)
         private List<MomentFollowUp> followUps;
 
@@ -64,10 +64,10 @@ public class Moment extends AbstractExtension {
         @Schema(requiredMode = REQUIRED, description = "Server-generated identifier")
         private String id;
 
-        @Schema(requiredMode = REQUIRED, description = "Plain-text reflection", maxLength = 1000)
+        @Schema(requiredMode = REQUIRED, description = "Plain-text follow-up", maxLength = 1000)
         private String content;
 
-        @Schema(requiredMode = REQUIRED, description = "Server-recorded time of the reflection")
+        @Schema(requiredMode = REQUIRED, description = "Server-recorded time of the follow-up")
         private Instant createdAt;
     }
 

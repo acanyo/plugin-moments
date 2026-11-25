@@ -91,9 +91,7 @@ const handlerCreateOrUpdateMoment = async () => {
   try {
     saving.value = true;
     queryEditorTags();
-    formState.value.spec.emotionalAttachment = normalizeEmotion(
-      formState.value.spec.emotionalAttachment
-    );
+    formState.value.spec.emotion = normalizeEmotion(formState.value.spec.emotion);
     if (isUpdateMode.value) {
       await handleUpdate(formState.value);
     } else {
@@ -248,7 +246,7 @@ const saveDisable = computed(() => {
   if (saving.value || emotionLoading.value) {
     return true;
   }
-  if (normalizeEmotion(formState.value.spec.emotionalAttachment)) {
+  if (normalizeEmotion(formState.value.spec.emotion)) {
     return false;
   }
   const medium = formState.value.spec.content.medium;
@@ -260,7 +258,7 @@ const saveDisable = computed(() => {
   }
 
   if (isUpdateMode.value) {
-    if (props.moment?.spec.emotionalAttachment) {
+    if (props.moment?.spec.emotion) {
       return false;
     }
     const oldVisible = props.moment?.spec.visible;
@@ -374,7 +372,7 @@ function handleKeydown(event: KeyboardEvent) {
           <TablerPhoto class=":uno: size-full text-base text-gray-600 group-hover:text-sky-600" />
         </button>
         <EmotionAttachmentEditor
-          v-model="formState.spec.emotionalAttachment"
+          v-model="formState.spec.emotion"
           :disabled="saving"
           @update:loading="emotionLoading = $event"
         />

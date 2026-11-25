@@ -37,7 +37,7 @@ https://raw.githubusercontent.com/halo-sigs/plugin-moments/refs/heads/main/api-d
 
 **返回值类型**：`ListResult<MomentVo>`
 
-每条记录的情感寄托位于 `items[i].spec.emotionalAttachment`，字段结构见[情感寄托字段](#情感寄托字段)。
+每条记录的心情与天气位于 `items[i].spec.emotion`，字段结构见[心情与天气字段](#心情与天气字段)。
 
 ### 查询瞬间详情
 
@@ -51,11 +51,11 @@ https://raw.githubusercontent.com/halo-sigs/plugin-moments/refs/heads/main/api-d
 
 **返回值类型**：`MomentVo`
 
-情感寄托位于 `spec.emotionalAttachment`，与 Finder API 和列表中单条记录的结构一致。
+心情与天气位于 `spec.emotion`，与 Finder API 和列表中单条记录的结构一致。
 
-### 情感寄托字段
+### 心情与天气字段
 
-`spec.emotionalAttachment` 是可选对象，未填写时可能缺失或为 `null`，对象内的各字段也均为可选。客户端需兼容旧瞬间、仅填写心情、部分获取成功，以及用户移除寄托的情况。
+`spec.emotion` 是可选对象，未填写时可能缺失或为 `null`，对象内的各字段也均为可选。客户端需兼容旧瞬间、仅填写心情、部分获取成功，以及用户清除心情、天气和位置的情况。
 
 | 字段 | 类型 | 说明 |
 | ---- | ---- | ---- |
@@ -79,7 +79,7 @@ https://raw.githubusercontent.com/halo-sigs/plugin-moments/refs/heads/main/api-d
         },
         "owner": "admin",
         "visible": "PUBLIC",
-        "emotionalAttachment": {
+        "emotion": {
             "mood": "😌 平静",
             "location": "杭州市",
             "weather": "晴 · 22°C",
@@ -98,7 +98,7 @@ if (!response.ok) {
 }
 const result = await response.json();
 for (const moment of result.items) {
-    const emotion = moment.spec.emotionalAttachment;
+    const emotion = moment.spec.emotion;
     console.log({
         name: moment.metadata.name,
         mood: emotion?.mood ?? "",
@@ -108,11 +108,11 @@ for (const moment of result.items) {
 }
 ```
 
-这些字段保存的是用户记录时的快照，查询接口不会重新定位或请求天气服务，也不会返回精确坐标。公开查询继续遵循瞬间的可见性、审核及删除状态规则。公共 API 仅提供读取；创建、修改和移除寄托需通过具备权限的 Console 或个人中心接口保存 `spec.emotionalAttachment`。
+这些字段保存的是用户记录时的快照，查询接口不会重新定位或请求天气服务，也不会返回精确坐标。公开查询继续遵循瞬间的可见性、审核及删除状态规则。公共 API 仅提供读取；创建、修改和清除心情、天气和位置需通过具备权限的 Console 或个人中心接口保存 `spec.emotion`。
 
-模板和 Finder 调用示例见[主题 API 文档](./theme-api.md#情感寄托)。
+模板和 Finder 调用示例见[主题 API 文档](./theme-api.md#心情与天气)。
 
-### 后来的我字段
+### 后续字段
 
 列表和详情继续使用原有接口，追加的后续位于 `spec.followUps`（列表中为 `items[i].spec.followUps`），无需单独请求。未追加时此字段可能缺失、为 `null` 或为空数组。
 
@@ -121,7 +121,7 @@ for (const moment of result.items) {
     "followUps": [
         {
             "id": "server-generated-id",
-            "content": "当时很难过的事，现在已经放下了。",
+            "content": "活动已结束，感谢大家参与。",
             "createdAt": "2026-11-06T08:00:00Z"
         }
     ]
@@ -143,7 +143,7 @@ for (const moment of result.items) {
 
 ```json
 {
-    "content": "当时很难过的事，现在已经放下了。"
+    "content": "活动已结束，感谢大家参与。"
 }
 ```
 
@@ -151,6 +151,6 @@ for (const moment of result.items) {
 
 错误状态：未登录返回 `401`（或进入 Halo 登录流程）；无发布/管理权限返回 `403`；瞬间不存在、已删除或属于他人返回 `404`；内容为空、过长或后续达到上限返回 `400`。
 
-追加只更新后续列表，不修改原文、发布时间、可见性或情感寄托。没有免审核权限的个人中心用户追加后，整条瞬间会重新进入审核；已有审核未通过的内容不会因追加而自动获准公开。普通个人中心编辑接口会保留已有后续，不能用完整替换 `spec` 的方式覆盖这些记录。
+追加只更新后续列表，不修改原文、发布时间、可见性或心情与天气。没有免审核权限的个人中心用户追加后，整条瞬间会重新进入审核；已有审核未通过的内容不会因追加而自动获准公开。普通个人中心编辑接口会保留已有后续，不能用完整替换 `spec` 的方式覆盖这些记录。
 
-主题展示和 Finder 示例见[后来的我](./theme-api.md#后来的我)。
+主题展示和 Finder 示例见[后续](./theme-api.md#后续)。

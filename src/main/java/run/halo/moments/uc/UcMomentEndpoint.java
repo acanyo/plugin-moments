@@ -60,7 +60,7 @@ public class UcMomentEndpoint implements CustomEndpoint {
         return SpringdocRouteBuilder.route()
             .POST("moments/{name}/follow-ups", this::appendMyFollowUp,
                 builder -> builder.operationId("AppendMyMomentFollowUp")
-                    .description("Append a later reflection to the current user's moment.")
+                    .description("Append a follow-up to the current user's moment.")
                     .tag(tag)
                     .parameter(parameterBuilder().name("name").in(ParameterIn.PATH)
                         .required(true).implementation(String.class))

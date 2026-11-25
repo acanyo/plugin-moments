@@ -24,11 +24,13 @@ public class MomentMigration implements Reconciler<Reconciler.Request> {
 
     @Override
     public Result reconcile(Request request) {
-        client.fetch(Moment.class, request.name()).ifPresent(moment -> {
-            moment.getSpec().setApproved(true);
-            moment.getSpec().setApprovedTime(moment.getMetadata().getCreationTimestamp());
-            client.update(moment);
-        });
+        client.fetch(Moment.class, request.name())
+            .filter(moment -> moment.getSpec().getApproved() == null)
+            .ifPresent(moment -> {
+                moment.getSpec().setApproved(true);
+                moment.getSpec().setApprovedTime(moment.getMetadata().getCreationTimestamp());
+                client.update(moment);
+            });
         return Result.doNotRetry();
     }
 

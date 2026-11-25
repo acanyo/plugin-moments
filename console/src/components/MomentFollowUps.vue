@@ -34,11 +34,11 @@ function onSaved(moment: Moment) {
   <section
     v-if="followUps.length || canAppend"
     class=":uno: moment-follow-ups"
-    aria-label="后来的我"
+    aria-label="后续"
     @dblclick.stop
   >
     <div v-if="followUps.length" class=":uno: moment-follow-ups__timeline">
-      <h3><Sprout aria-hidden="true" />后来的我</h3>
+      <h3><Sprout aria-hidden="true" />后续</h3>
       <ol>
         <li v-for="followUp in followUps" :key="followUp.id">
           <time :datetime="followUp.createdAt" :title="utils.date.format(followUp.createdAt)">{{
@@ -54,7 +54,7 @@ function onSaved(moment: Moment) {
       class=":uno: moment-follow-ups__append"
       @click="editing = true"
     >
-      <Sprout aria-hidden="true" />写下后续
+      <Sprout aria-hidden="true" />添加后续
     </button>
     <FollowUpEditor
       v-if="editing && canAppend"

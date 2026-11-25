@@ -110,9 +110,9 @@ async function locate() {
   <PopoverRoot v-model:open="expanded">
     <PopoverTrigger as-child>
       <button
-        v-tooltip="{ content: '情感寄托' }"
+        v-tooltip="{ content: '心情与天气' }"
         type="button"
-        aria-label="情感寄托"
+        aria-label="心情与天气"
         :aria-busy="loading"
         :disabled="disabled"
         class=":uno: group flex cursor-pointer items-center justify-center rounded-full p-2 hover:bg-sky-600/10 focus-visible:outline-2 focus-visible:outline-sky-600"
@@ -136,21 +136,21 @@ async function locate() {
         align="start"
         :side-offset="8"
         :collision-padding="12"
-        aria-label="情感寄托"
+        aria-label="心情与天气"
       >
         <div class=":uno: emotion-editor__bar">
-          <span class=":uno: emotion-editor__title">情感寄托</span>
+          <span class=":uno: emotion-editor__title">心情与天气</span>
           <PopoverClose as-child>
-            <button type="button" class=":uno: emotion-editor__close" aria-label="关闭情感寄托">
+            <button type="button" class=":uno: emotion-editor__close" aria-label="关闭心情与天气">
               <X aria-hidden="true" />
             </button>
           </PopoverClose>
         </div>
 
         <div class=":uno: emotion-editor__panel">
-          <p class=":uno: emotion-editor__intro">记下此刻的心情和身边的天气</p>
+          <p class=":uno: emotion-editor__intro">记录心情、天气和位置</p>
           <fieldset :disabled="disabled || loading">
-            <legend>此刻心情</legend>
+            <legend>心情</legend>
             <div class=":uno: emotion-editor__moods">
               <button
                 v-for="mood in moods"
@@ -169,7 +169,7 @@ async function locate() {
                   :value="model?.location || ''"
                   type="text"
                   maxlength="100"
-                  placeholder="你在哪里？"
+                  placeholder="例如：北京市"
                   @input="updateField('location', ($event.target as HTMLInputElement).value)"
                 />
               </label>

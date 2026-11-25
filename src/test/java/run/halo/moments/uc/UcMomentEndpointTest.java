@@ -62,7 +62,7 @@ class UcMomentEndpointTest {
         emotion.setLocation("杭州市");
         emotion.setWeather("晴 · 22°C");
         emotion.setWeatherSource("open-meteo");
-        update.getSpec().setEmotionalAttachment(emotion);
+        update.getSpec().setEmotion(emotion);
         update.getSpec().setFollowUps(java.util.List.of());
 
         client.put().uri("/moments/moment-test").bodyValue(update).exchange()
@@ -74,7 +74,7 @@ class UcMomentEndpointTest {
             .isEqualTo(releaseTime == null ? latestReleaseTime : Instant.parse(releaseTime));
         assertThat(saved.getValue().getSpec().getOwner()).isEqualTo("alice");
         assertThat(saved.getValue().getSpec().getApproved()).isFalse();
-        assertThat(saved.getValue().getSpec().getEmotionalAttachment()).isEqualTo(emotion);
+        assertThat(saved.getValue().getSpec().getEmotion()).isEqualTo(emotion);
         assertThat(saved.getValue().getSpec().getFollowUps()).containsExactly(later);
     }
 
@@ -84,7 +84,7 @@ class UcMomentEndpointTest {
         var original = new Moment();
         original.setSpec(new Moment.MomentSpec());
         original.getSpec().setOwner("alice");
-        original.getSpec().setEmotionalAttachment(new Moment.MomentEmotion());
+        original.getSpec().setEmotion(new Moment.MomentEmotion());
         when(service.getByUsername("moment-test", "alice")).thenReturn(Mono.just(original));
         when(service.updateBy(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         var endpoint = new UcMomentEndpoint(service, mock(RoleService.class),
@@ -106,7 +106,7 @@ class UcMomentEndpointTest {
 
         var saved = ArgumentCaptor.forClass(Moment.class);
         verify(service).updateBy(saved.capture());
-        assertThat(saved.getValue().getSpec().getEmotionalAttachment()).isNull();
+        assertThat(saved.getValue().getSpec().getEmotion()).isNull();
         assertThat(saved.getValue().getSpec().getOwner()).isEqualTo("alice");
         assertThat(saved.getValue().getSpec().getApproved()).isFalse();
     }

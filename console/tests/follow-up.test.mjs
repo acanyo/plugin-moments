@@ -14,7 +14,7 @@ const saveCode = ast.statements
   .getText(ast);
 
 function setup(uc, request) {
-  const content = ref("  现在已经放下了。  ");
+  const content = ref("  活动已结束。  ");
   const saving = ref(false);
   const events = [];
   const props = {
@@ -51,11 +51,11 @@ for (const uc of [false, true]) {
     const editor = setup(uc, (params, endpointUc) => {
       calls++;
       assert.equal(endpointUc, uc);
-      assert.deepEqual(params, { name: "one", followUpRequest: { content: "现在已经放下了。" } });
+      assert.deepEqual(params, { name: "one", followUpRequest: { content: "活动已结束。" } });
       return pending;
     });
     const savedMoment = {
-      spec: { followUps: [{ id: "new", content: "现在已经放下了。" }], approved: true },
+      spec: { followUps: [{ id: "new", content: "活动已结束。" }], approved: true },
     };
     const submission = editor.save();
     await editor.save();
@@ -76,7 +76,7 @@ for (const uc of [false, true]) {
       return { data: { spec: { approved: true } } };
     });
     await editor.save();
-    assert.equal(editor.content.value, "  现在已经放下了。  ");
+    assert.equal(editor.content.value, "  活动已结束。  ");
     assert.equal(editor.saving.value, false);
     assert.deepEqual(editor.events, []);
     fails = false;
